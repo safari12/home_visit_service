@@ -2,7 +2,7 @@ import Config
 
 # Configure your database
 config :home_visit_service, HomeVisitService.Repo,
-  username: "postgres",
+  username: "safari",
   password: "postgres",
   hostname: "localhost",
   database: "home_visit_service_dev",
