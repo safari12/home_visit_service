@@ -6,6 +6,7 @@ defmodule HomeVisitService.Accounts.User do
     :email,
     :first_name,
     :last_name,
+    :password,
     :roles
   ]
 
