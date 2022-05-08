@@ -5,12 +5,14 @@ defmodule HomeVisitService.Accounts.User do
   @required_fields [
     :email,
     :first_name,
-    :last_name
+    :last_name,
+    :roles
   ]
 
   schema "users" do
     field :first_name, :string
     field :last_name, :string
+    field :roles, {:array, Ecto.Enum}, values: [:member, :pal]
     field :email, :string
     field :password_hash, :string
     field :password, :string, virtual: true
