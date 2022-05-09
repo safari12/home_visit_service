@@ -8,7 +8,7 @@ defmodule HomeVisitService.Accounts do
   def create_user(attrs) do
     %User{}
     |> User.changeset(attrs)
-    |> Repo.insert_or_update()
+    |> Repo.insert()
   end
 
   def autenticate(email, password) do

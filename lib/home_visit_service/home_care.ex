@@ -5,11 +5,12 @@ defmodule HomeVisitService.HomeCare do
 
   def request_visit(%User{} = user, attrs) do
     %Visit{}
-    |> Visit.changeset(attrs)
-    |> ensure_user_is_member(user)
+    |> Visit.changeset(user, attrs)
     |> Ecto.Changeset.put_assoc(:member, user)
     |> Repo.insert()
   end
+
+  def get_all_visits(), do: Repo.all(Visit)
 
   def create_default_plans() do
     [
@@ -35,14 +36,4 @@ defmodule HomeVisitService.HomeCare do
   end
 
   def get_supported_health_plans(), do: Repo.all(HealthPlan)
-
-  defp ensure_user_is_member(changeset, user) do
-    case :member in user.roles do
-      true ->
-        changeset
-
-      false ->
-        Ecto.Changeset.add_error(changeset, :member, "User must be a member to request a visit")
-    end
-  end
 end

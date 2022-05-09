@@ -2,6 +2,8 @@ defmodule HomeVisitService.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias HomeVisitService.HomeCare.Transaction
+
   @required_fields [
     :email,
     :first_name,
