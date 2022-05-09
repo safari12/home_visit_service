@@ -11,6 +11,9 @@
 # and so on) as they will fail if something goes wrong.
 
 alias HomeVisitService.Accounts
+alias HomeVisitService.HomeCare
+
+HomeCare.create_default_plans()
 
 Accounts.create_user(%{
   email: "pal@test.com",

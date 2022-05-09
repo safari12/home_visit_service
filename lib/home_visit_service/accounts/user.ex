@@ -2,14 +2,17 @@ defmodule HomeVisitService.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias HomeVisitService.HomeCare.Transaction
+  alias HomeVisitService.HomeCare
 
   @required_fields [
     :email,
     :first_name,
     :last_name,
     :password,
-    :roles,
+    :roles
+  ]
+
+  @optional_fields [
     :health_plan_id
   ]
 
@@ -20,6 +23,7 @@ defmodule HomeVisitService.Accounts.User do
     field :email, :string
     field :password_hash, :string
     field :password, :string, virtual: true
+    field :remaining_minutes, :integer
 
     belongs_to :health_plan, HomeVisitService.HomeCare.HealthPlan,
       references: :plan_type,
@@ -30,13 +34,14 @@ defmodule HomeVisitService.Accounts.User do
 
   def changeset(user, attrs) do
     user
-    |> cast(attrs, @required_fields)
+    |> cast(attrs, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
     |> validate_length(:first_name, min: 3)
     |> validate_length(:last_name, min: 3)
     |> unique_constraint(:email)
     |> assoc_constraint(:health_plan)
     |> hash_password()
+    |> put_remaining_minutes()
   end
 
   defp hash_password(changeset) do
@@ -45,6 +50,25 @@ defmodule HomeVisitService.Accounts.User do
         put_change(changeset, :password_hash, Pbkdf2.hash_pwd_salt(password))
 
       _ ->
+        changeset
+    end
+  end
+
+  defp put_remaining_minutes(changeset) do
+    %Ecto.Changeset{valid?: true, changes: %{roles: roles}} = changeset
+
+    case :member in roles do
+      true ->
+        with %Ecto.Changeset{valid?: true, changes: %{health_plan_id: health_plan_id}} <-
+               changeset,
+             health_plan when not is_nil(health_plan) <- HomeCare.get_health_plan(health_plan_id) do
+          put_change(changeset, :remaining_minutes, health_plan.minutes)
+        else
+          _ ->
+            add_error(changeset, :health_plan, "Invalid health plan")
+        end
+
+      false ->
         changeset
     end
   end

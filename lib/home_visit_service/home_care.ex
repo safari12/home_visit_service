@@ -8,6 +8,18 @@ defmodule HomeVisitService.HomeCare do
     |> Visit.changeset(user, attrs)
     |> Ecto.Changeset.put_assoc(:member, user)
     |> Repo.insert()
+    |> case do
+      {:ok, visit} ->
+        remaining_minutes = user.remaining_minutes - visit.minutes
+
+        Ecto.Changeset.change(user, remaining_minutes: remaining_minutes)
+        |> Repo.update()
+
+        %{visit | member: %{visit.member | remaining_minutes: remaining_minutes}}
+
+      errors ->
+        errors
+    end
   end
 
   def get_all_visits(), do: Repo.all(Visit)
@@ -36,4 +48,5 @@ defmodule HomeVisitService.HomeCare do
   end
 
   def get_supported_health_plans(), do: Repo.all(HealthPlan)
+  def get_health_plan(type), do: Repo.get_by(HealthPlan, %{plan_type: type})
 end

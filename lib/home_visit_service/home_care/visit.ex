@@ -1,11 +1,9 @@
 defmodule HomeVisitService.HomeCare.Visit do
   use Ecto.Schema
   import Ecto.Changeset
-  import Ecto.Query
 
   alias HomeVisitService.Accounts.User
-  alias HomeVisitService.HomeCare.{Visit, Transaction}
-  alias HomeVisitService.Repo
+  alias HomeVisitService.HomeCare.Visit
 
   @required_fields [
     :date,
@@ -53,28 +51,16 @@ defmodule HomeVisitService.HomeCare.Visit do
   defp validate_user_plan_balance(changeset, %User{} = user) do
     %Ecto.Changeset{valid?: true, changes: %{minutes: new_minutes}} = changeset
 
-    minutes_used =
-      from(t in Transaction, where: t.member_id == ^user.id)
-      |> Repo.preload(:visit)
-      |> Repo.all()
-      |> Enum.reduce(0, fn t, acc ->
-        acc + t.visit.minutes
-      end)
+    case new_minutes <= user.remaining_minutes do
+      true ->
+        changeset
 
-    user
-    |> Repo.preload(:health_plan)
-    |> then(
-      &case minutes_used + new_minutes <= &1.health_plan.minutes do
-        true ->
-          changeset
-
-        false ->
-          Ecto.Changeset.add_error(
-            changeset,
-            :minutes,
-            "The visit you requested surpasses the remaining time in your health plan"
-          )
-      end
-    )
+      false ->
+        Ecto.Changeset.add_error(
+          changeset,
+          :minutes,
+          "The visit you requested surpasses the remaining time in your health plan"
+        )
+    end
   end
 end
