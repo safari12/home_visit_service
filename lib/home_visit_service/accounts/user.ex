@@ -7,7 +7,8 @@ defmodule HomeVisitService.Accounts.User do
     :first_name,
     :last_name,
     :password,
-    :roles
+    :roles,
+    :health_plan_id
   ]
 
   schema "users" do
@@ -17,6 +18,10 @@ defmodule HomeVisitService.Accounts.User do
     field :email, :string
     field :password_hash, :string
     field :password, :string, virtual: true
+
+    belongs_to :health_plan, HomeVisitService.HomeCare.HealthPlan,
+      references: :plan_type,
+      type: :string
 
     timestamps()
   end
@@ -28,6 +33,7 @@ defmodule HomeVisitService.Accounts.User do
     |> validate_length(:first_name, min: 3)
     |> validate_length(:last_name, min: 3)
     |> unique_constraint(:email)
+    |> assoc_constraint(:health_plan)
     |> hash_password()
   end
 
