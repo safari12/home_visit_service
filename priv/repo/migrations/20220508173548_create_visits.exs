@@ -6,6 +6,7 @@ defmodule HomeVisitService.Repo.Migrations.CreateVisits do
       add :date, :date
       add :minutes, :integer
       add :tasks, {:array, :string}
+      add :status, :string
       add :member_id, references(:users), null: false
     end
 

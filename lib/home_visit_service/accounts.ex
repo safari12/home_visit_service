@@ -9,12 +9,6 @@ defmodule HomeVisitService.Accounts do
     %User{}
     |> User.changeset(attrs)
     |> Repo.insert()
-    |> case do
-      {:ok, user} ->
-        user
-        |> Repo.preload(:health_plan)
-        |>
-    end
   end
 
   def autenticate(email, password) do

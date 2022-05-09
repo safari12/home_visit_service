@@ -3,7 +3,7 @@ defmodule HomeVisitService.HomeCare.Visit do
   import Ecto.Changeset
 
   alias HomeVisitService.Accounts.User
-  alias HomeVisitService.HomeCare.Visit
+  alias HomeVisitService.HomeCare.{Visit, Transaction}
 
   @required_fields [
     :date,
@@ -14,6 +14,7 @@ defmodule HomeVisitService.HomeCare.Visit do
   schema "visits" do
     field :date, :date
     field :minutes, :integer
+    field :status, Ecto.Enum, values: [:pending, :fulfilled], default: :pending
 
     field :tasks, {:array, Ecto.Enum},
       values: [
@@ -26,7 +27,8 @@ defmodule HomeVisitService.HomeCare.Visit do
         :conversation
       ]
 
-    belongs_to :member, HomeVisitService.Accounts.User
+    belongs_to :member, User
+    has_one :transaction, Transaction
   end
 
   def changeset(%Visit{} = visit, %User{} = user, attrs) do

@@ -1,6 +1,6 @@
 defmodule HomeVisitService.HomeCare do
   alias HomeVisitService.Accounts.User
-  alias HomeVisitService.HomeCare.{Visit, HealthPlan}
+  alias HomeVisitService.HomeCare.{Visit, HealthPlan, Transaction}
   alias HomeVisitService.Repo
 
   def request_visit(%User{} = user, attrs) do
@@ -20,6 +20,36 @@ defmodule HomeVisitService.HomeCare do
       errors ->
         errors
     end
+  end
+
+  def fulfill_visit(%User{} = user, visit_id) do
+    Repo.transaction(fn repo ->
+      if :pal not in user.roles do
+        repo.rollback(:invalid_role)
+      end
+
+      visit = repo.get!(Visit, visit_id)
+
+      %Transaction{}
+      |> Transaction.changeset(%{
+        member_id: visit.member_id,
+        pal_id: user.id,
+        visit_id: visit.id
+      })
+      |> repo.insert!()
+
+      user
+      |> Ecto.Changeset.change(
+        remaining_minutes:
+          (user.remaining_minutes || 0) + round(visit.minutes - visit.minutes * 0.15)
+      )
+      |> repo.update!()
+
+      visit
+      |> Ecto.Changeset.change(status: :fulfilled)
+      |> repo.update!()
+      |> repo.preload(:transaction)
+    end)
   end
 
   def get_all_visits(), do: Repo.all(Visit)

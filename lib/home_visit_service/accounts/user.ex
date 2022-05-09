@@ -23,7 +23,7 @@ defmodule HomeVisitService.Accounts.User do
     field :email, :string
     field :password_hash, :string
     field :password, :string, virtual: true
-    field :remaining_minutes, :integer
+    field :remaining_minutes, :integer, default: 0
 
     belongs_to :health_plan, HomeVisitService.HomeCare.HealthPlan,
       references: :plan_type,
