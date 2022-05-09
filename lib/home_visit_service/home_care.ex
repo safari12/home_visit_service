@@ -30,6 +30,10 @@ defmodule HomeVisitService.HomeCare do
 
       visit = repo.get!(Visit, visit_id)
 
+      if visit.status == :fulfilled do
+        repo.rollback(:visit_already_fulfilled)
+      end
+
       %Transaction{}
       |> Transaction.changeset(%{
         member_id: visit.member_id,
