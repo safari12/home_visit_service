@@ -6,7 +6,7 @@ defmodule HomeVisitServiceWeb.Resolvers.HomeCare do
     {:ok, HomeCare.get_visits_by_status(status)}
   end
 
-  def health_plans(_, _, _), do: HomeCare.get_supported_health_plans()
+  def health_plans(_, _, _), do: {:ok, HomeCare.get_supported_health_plans()}
 
   def request_visit(_, args, %{context: %{current_user: user}}) do
     case HomeCare.request_visit(user, args) do

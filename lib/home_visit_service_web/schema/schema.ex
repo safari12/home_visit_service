@@ -89,6 +89,7 @@ defmodule HomeVisitServiceWeb.Schema.Schema do
   end
 
   object :health_plan do
+    field :plan_type, non_null(:string)
     field :minutes, non_null(:integer)
     field :price, non_null(:float)
   end

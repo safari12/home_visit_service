@@ -2,8 +2,8 @@ import Config
 
 # Configure your database
 config :home_visit_service, HomeVisitService.Repo,
-  username: "safari",
-  password: "postgres",
+  username: System.get_env("DB_USER", "postgres"),
+  password: System.get_env("DB_PASS", "postgres"),
   hostname: "localhost",
   database: "home_visit_service_dev",
   stacktrace: true,
