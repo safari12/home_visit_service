@@ -93,7 +93,11 @@ query HealthPlans {
 
 ----
 ## ```Visits```
-When a member request a visit, it will debit from the account the visit's duration from their remaining_minutes. If an account tried to request a visit duration greater than the minutes they have the api respond with an error. When a pal fulfills a visit, it gets credited to their account's remaining_minutes. Accounts cannot not fulfill their own visit
+When a member request a visit, it will debit from the account the visit's duration from their remaining_minutes. If an account tried to request a visit duration greater than the minutes they have the api respond with an error. When a pal fulfills a visit, it gets credited to their account's remaining_minutes. Accounts cannot not fulfill their own visit.
+
+A visit's status will change when fulfilled
+
+Also when a user request or fulfills a visit it goes through a database transaction in which if any of the steps fail it will rollback automattically
 
 For a visit the following tasks are supported
 ```
