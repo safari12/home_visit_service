@@ -15,7 +15,7 @@ defmodule HomeVisitService.HomeCare do
         Ecto.Changeset.change(user, remaining_minutes: remaining_minutes)
         |> Repo.update()
 
-        %{visit | member: %{visit.member | remaining_minutes: remaining_minutes}}
+        {:ok, %{visit | member: %{visit.member | remaining_minutes: remaining_minutes}}}
 
       errors ->
         errors
