@@ -30,13 +30,6 @@ defmodule HomeVisitService.HomeCare do
   def fulfill_visit(%User{} = user, visit_id) do
     try do
       Repo.transaction(fn repo ->
-        if :pal not in user.roles do
-          %Visit{}
-          |> Ecto.Changeset.cast(%{}, [])
-          |> Ecto.Changeset.add_error(:invalid_role, "User must be a pal to fulfill a visit")
-          |> repo.rollback()
-        end
-
         visit = repo.get!(Visit, visit_id)
 
         if visit.status == :fulfilled do

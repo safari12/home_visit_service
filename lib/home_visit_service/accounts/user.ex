@@ -8,8 +8,7 @@ defmodule HomeVisitService.Accounts.User do
     :email,
     :first_name,
     :last_name,
-    :password,
-    :roles
+    :password
   ]
 
   @optional_fields [
@@ -19,7 +18,6 @@ defmodule HomeVisitService.Accounts.User do
   schema "users" do
     field :first_name, :string
     field :last_name, :string
-    field :roles, {:array, Ecto.Enum}, values: [:member, :pal]
     field :email, :string
     field :password_hash, :string
     field :password, :string, virtual: true
@@ -55,20 +53,12 @@ defmodule HomeVisitService.Accounts.User do
   end
 
   defp put_remaining_minutes(changeset) do
-    %Ecto.Changeset{valid?: true, changes: %{roles: roles}} = changeset
-
-    case :member in roles do
-      true ->
-        with %Ecto.Changeset{valid?: true, changes: %{health_plan_id: health_plan_id}} <-
-               changeset,
-             health_plan when not is_nil(health_plan) <- HomeCare.get_health_plan(health_plan_id) do
-          put_change(changeset, :remaining_minutes, health_plan.minutes)
-        else
-          _ ->
-            add_error(changeset, :health_plan, "Invalid health plan")
-        end
-
-      false ->
+    with %Ecto.Changeset{valid?: true, changes: %{health_plan_id: health_plan_id}} <-
+           changeset,
+         health_plan when not is_nil(health_plan) <- HomeCare.get_health_plan(health_plan_id) do
+      put_change(changeset, :remaining_minutes, health_plan.minutes)
+    else
+      _ ->
         changeset
     end
   end

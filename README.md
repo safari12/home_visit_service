@@ -32,10 +32,10 @@ To interact with the graphql api following this link ```http://localhost:4000/gr
 ## ```Authentication```
 The api supports authentication for users to create an account and authenticate through JsonWebToken by pasting it in the ```Authorization``` bearer header ```Bearer <token>```
 
-Each member account is associated with a health plan they choose, the available health plans are basic, immediate, advance. Each giving a specific amount of minutes to their account (remaining_minutes field)
+Each account can be associated with a health plan, the available health plans are basic, immediate, advance. Each giving a specific amount of minutes to their account (remaining_minutes field)
 
 
-```To sign up for member account```
+```To sign up for member account with health plan```
 ```graphql
 mutation SignUp {
   signup(
@@ -43,39 +43,21 @@ mutation SignUp {
     firstName: "member",
     lastName: "member",
     password: "blah69blah",
-    healthPlanId: "basic",
-    roles: [MEMBER]
+    healthPlanId: "basic"
   ) {
     token
   }
 }
 ```
 
-```To sign up for pal account```
+```To sign up for pal account without health plan```
 ```graphql
 mutation SignUp {
   signup(
     email: "pal@homeservice.com",
     firstName: "pal",
     lastName: "pal",
-    password: "blah69blah",
-    roles: [PAL]
-  ) {
-    token
-  }
-}
-```
-
-```To sign up for both roles account```
-```graphql
-mutation SignUp {
-  signup(
-    email: "super@homeservice.com",
-    firstName: "super",
-    lastName: "super",
-    healthPlanId: "basic",
-    password: "blah69blah",
-    roles: [MEMBER, PAL]
+    password: "blah69blah"
   ) {
     token
   }
@@ -111,7 +93,7 @@ query HealthPlans {
 
 ----
 ## ```Visits```
-When a member request a visit, it will debit from the account the visit's duration from their remaining_minutes. If the member tried to request a visit duration greater than the minutes they have the api respond with an error. When a pal fulfills a visit, it gets credited to their account's remaining_minutes. Pals cannot not fulfill their own visit. And a member cannot fulfill a visit
+When a member request a visit, it will debit from the account the visit's duration from their remaining_minutes. If an account tried to request a visit duration greater than the minutes they have the api respond with an error. When a pal fulfills a visit, it gets credited to their account's remaining_minutes. Accounts cannot not fulfill their own visit
 
 For a visit the following tasks are supported
 ```

@@ -35,19 +35,8 @@ defmodule HomeVisitService.HomeCare.Visit do
     visit
     |> cast(attrs, @required_fields)
     |> validate_required(@required_fields)
-    |> validate_user_is_member(user)
     |> validate_user_plan_balance(user)
     |> assoc_constraint(:member)
-  end
-
-  defp validate_user_is_member(changeset, %User{} = user) do
-    case :member in user.roles do
-      true ->
-        changeset
-
-      false ->
-        Ecto.Changeset.add_error(changeset, :member, "User must be a member to request a visit")
-    end
   end
 
   defp validate_user_plan_balance(changeset, %User{} = user) do

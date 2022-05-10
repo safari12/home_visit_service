@@ -6,7 +6,6 @@ defmodule HomeVisitServiceWeb.Schema.Schema do
   import_types(Absinthe.Type.Custom)
 
   enum(:status, values: [:pending, :fulfilled])
-  enum(:role, values: [:member, :pal])
 
   enum(:task,
     values: [
@@ -46,7 +45,6 @@ defmodule HomeVisitServiceWeb.Schema.Schema do
       arg(:email, non_null(:string))
       arg(:password, non_null(:string))
       arg(:health_plan_id, :string)
-      arg(:roles, list_of(:role))
       resolve(&Resolvers.Accounts.signup/3)
     end
 
@@ -78,7 +76,6 @@ defmodule HomeVisitServiceWeb.Schema.Schema do
     field :email, non_null(:string)
     field :first_name, non_null(:string)
     field :last_name, non_null(:string)
-    field :roles, list_of(:string)
     field :health_plan_id, :string
     field :remaining_minutes, non_null(:integer)
   end
