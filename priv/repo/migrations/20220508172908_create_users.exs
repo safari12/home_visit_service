@@ -10,8 +10,7 @@ defmodule HomeVisitService.Repo.Migrations.CreateUsers do
       add :password_hash, :string, null: false
       add :remaining_minutes, :integer
 
-      add :health_plan_id, references(:health_plans, column: :plan_type, type: :string),
-        null: false
+      add :health_plan_id, references(:health_plans, column: :plan_type, type: :string)
 
       timestamps()
     end

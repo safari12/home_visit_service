@@ -5,6 +5,21 @@ defmodule HomeVisitServiceWeb.Schema.Schema do
 
   import_types(Absinthe.Type.Custom)
 
+  enum(:status, values: [:pending, :fulfilled])
+  enum(:role, values: [:member, :pal])
+
+  enum(:task,
+    values: [
+      :housekeeping,
+      :laundry_service,
+      :grocery_shopping,
+      :cooking_meals,
+      :running_errands,
+      :companionship,
+      :conversation
+    ]
+  )
+
   query do
     @desc "Get the currently signed-in user"
     field :me, :user do
@@ -15,6 +30,12 @@ defmodule HomeVisitServiceWeb.Schema.Schema do
     field :health_plans, list_of(:health_plan) do
       resolve(&Resolvers.HomeCare.health_plans/3)
     end
+
+    @desc "Get visits by status"
+    field :visits, list_of(:visit) do
+      arg(:status, non_null(:status))
+      resolve(&Resolvers.HomeCare.visits/3)
+    end
   end
 
   mutation do
@@ -24,8 +45,8 @@ defmodule HomeVisitServiceWeb.Schema.Schema do
       arg(:last_name, non_null(:string))
       arg(:email, non_null(:string))
       arg(:password, non_null(:string))
-      arg(:health_plan_id, non_null(:string))
-      arg(:roles, list_of(:string))
+      arg(:health_plan_id, :string)
+      arg(:roles, list_of(:role))
       resolve(&Resolvers.Accounts.signup/3)
     end
 
@@ -40,9 +61,16 @@ defmodule HomeVisitServiceWeb.Schema.Schema do
     field :request_visit, :visit do
       arg(:date, non_null(:date))
       arg(:minutes, non_null(:integer))
-      arg(:tasks, list_of(:string))
+      arg(:tasks, non_null(list_of(:task)))
       middleware(Middlewares.Authenticate)
       resolve(&Resolvers.HomeCare.request_visit/3)
+    end
+
+    @desc "Fulfill a visit"
+    field :fulfill_visit, :visit do
+      arg(:visit_id, non_null(:integer))
+      middleware(Middlewares.Authenticate)
+      resolve(&Resolvers.HomeCare.fulfilled_visit/3)
     end
   end
 
@@ -51,6 +79,7 @@ defmodule HomeVisitServiceWeb.Schema.Schema do
     field :first_name, non_null(:string)
     field :last_name, non_null(:string)
     field :roles, list_of(:string)
+    field :health_plan_id, :string
     field :remaining_minutes, non_null(:integer)
   end
 
@@ -65,10 +94,18 @@ defmodule HomeVisitServiceWeb.Schema.Schema do
   end
 
   object :visit do
+    field :id, non_null(:integer)
     field :date, non_null(:date)
     field :minutes, non_null(:integer)
     field :tasks, list_of(:string)
-    field :status, non_null(:string)
+    field :status, non_null(:status)
     field :member_id, non_null(:integer)
+    field :transaction, :transaction
+  end
+
+  object :transaction do
+    field :member_id, non_null(:integer)
+    field :pal_id, non_null(:integer)
+    field :visit_id, non_null(:integer)
   end
 end

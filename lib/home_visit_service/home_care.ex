@@ -3,35 +3,46 @@ defmodule HomeVisitService.HomeCare do
   alias HomeVisitService.HomeCare.{Visit, HealthPlan, Transaction}
   alias HomeVisitService.Repo
 
+  import Ecto.Query, only: [from: 2]
+
   def request_visit(%User{} = user, attrs) do
-    %Visit{}
-    |> Visit.changeset(user, attrs)
-    |> Ecto.Changeset.put_assoc(:member, user)
-    |> Repo.insert()
-    |> case do
-      {:ok, visit} ->
+    try do
+      Repo.transaction(fn repo ->
+        visit =
+          %Visit{}
+          |> Visit.changeset(user, attrs)
+          |> Ecto.Changeset.put_assoc(:member, user)
+          |> repo.insert!()
+
         remaining_minutes = user.remaining_minutes - visit.minutes
 
         Ecto.Changeset.change(user, remaining_minutes: remaining_minutes)
-        |> Repo.update()
+        |> repo.update!()
 
-        {:ok, %{visit | member: %{visit.member | remaining_minutes: remaining_minutes}}}
-
-      errors ->
-        errors
+        %{visit | member: %{visit.member | remaining_minutes: remaining_minutes}}
+      end)
+    rescue
+      e ->
+        {:error, e.changeset}
     end
   end
 
   def fulfill_visit(%User{} = user, visit_id) do
     Repo.transaction(fn repo ->
       if :pal not in user.roles do
-        repo.rollback(:invalid_role)
+        %Visit{}
+        |> Ecto.Changeset.cast(%{}, [])
+        |> Ecto.Changeset.add_error(:invalid_role, "User must be a pal to fulfill a visit")
+        |> repo.rollback()
       end
 
       visit = repo.get!(Visit, visit_id)
 
       if visit.status == :fulfilled do
-        repo.rollback(:visit_already_fulfilled)
+        %Visit{}
+        |> Ecto.Changeset.cast(%{}, [])
+        |> Ecto.Changeset.add_error(:visit_already_fulfilled, "Visit is already fulfilled")
+        |> repo.rollback()
       end
 
       %Transaction{}
@@ -56,22 +67,26 @@ defmodule HomeVisitService.HomeCare do
     end)
   end
 
+  def get_visits_by_status(status) do
+    from(v in Visit, where: v.status == ^status) |> Repo.all()
+  end
+
   def get_all_visits(), do: Repo.all(Visit)
 
   def create_default_plans() do
     [
       %{
-        minutes: 43800,
+        minutes: 120,
         price: 0.35,
         plan_type: "basic"
       },
       %{
-        minutes: 43800 * 3,
+        minutes: 120 * 3,
         price: 0.28,
         plan_type: "immediate"
       },
       %{
-        minutes: 43800 * 6,
+        minutes: 120 * 6,
         price: 0.22,
         plan_type: "advance"
       }

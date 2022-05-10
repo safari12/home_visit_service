@@ -51,18 +51,22 @@ defmodule HomeVisitService.HomeCare.Visit do
   end
 
   defp validate_user_plan_balance(changeset, %User{} = user) do
-    %Ecto.Changeset{valid?: true, changes: %{minutes: new_minutes}} = changeset
+    case changeset do
+      %Ecto.Changeset{valid?: true, changes: %{minutes: new_minutes}} ->
+        case new_minutes <= user.remaining_minutes do
+          true ->
+            changeset
 
-    case new_minutes <= user.remaining_minutes do
-      true ->
+          false ->
+            Ecto.Changeset.add_error(
+              changeset,
+              :minutes,
+              "The visit you requested surpasses the remaining time in your account"
+            )
+        end
+
+      changeset ->
         changeset
-
-      false ->
-        Ecto.Changeset.add_error(
-          changeset,
-          :minutes,
-          "The visit you requested surpasses the remaining time in your health plan"
-        )
     end
   end
 end

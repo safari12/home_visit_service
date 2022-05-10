@@ -6,6 +6,8 @@ defmodule HomeVisitService.Accounts do
   def get_user_by_email(email), do: Repo.get_by(User, %{email: email})
 
   def create_user(attrs) do
+    IO.inspect(attrs)
+
     %User{}
     |> User.changeset(attrs)
     |> Repo.insert()
