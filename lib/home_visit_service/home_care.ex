@@ -28,43 +28,55 @@ defmodule HomeVisitService.HomeCare do
   end
 
   def fulfill_visit(%User{} = user, visit_id) do
-    Repo.transaction(fn repo ->
-      if :pal not in user.roles do
-        %Visit{}
-        |> Ecto.Changeset.cast(%{}, [])
-        |> Ecto.Changeset.add_error(:invalid_role, "User must be a pal to fulfill a visit")
-        |> repo.rollback()
-      end
+    try do
+      Repo.transaction(fn repo ->
+        if :pal not in user.roles do
+          %Visit{}
+          |> Ecto.Changeset.cast(%{}, [])
+          |> Ecto.Changeset.add_error(:invalid_role, "User must be a pal to fulfill a visit")
+          |> repo.rollback()
+        end
 
-      visit = repo.get!(Visit, visit_id)
+        visit = repo.get!(Visit, visit_id)
 
-      if visit.status == :fulfilled do
-        %Visit{}
-        |> Ecto.Changeset.cast(%{}, [])
-        |> Ecto.Changeset.add_error(:visit_already_fulfilled, "Visit is already fulfilled")
-        |> repo.rollback()
-      end
+        if visit.status == :fulfilled do
+          %Visit{}
+          |> Ecto.Changeset.cast(%{}, [])
+          |> Ecto.Changeset.add_error(:visit_already_fulfilled, "Visit is already fulfilled")
+          |> repo.rollback()
+        end
 
-      %Transaction{}
-      |> Transaction.changeset(%{
-        member_id: visit.member_id,
-        pal_id: user.id,
-        visit_id: visit.id
-      })
-      |> repo.insert!()
+        if visit.member_id == user.id do
+          %Visit{}
+          |> Ecto.Changeset.cast(%{}, [])
+          |> Ecto.Changeset.add_error(:invalid_fulfilled, "Cant not fulfill your own visit")
+          |> repo.rollback()
+        end
 
-      user
-      |> Ecto.Changeset.change(
-        remaining_minutes:
-          (user.remaining_minutes || 0) + round(visit.minutes - visit.minutes * 0.15)
-      )
-      |> repo.update!()
+        %Transaction{}
+        |> Transaction.changeset(%{
+          member_id: visit.member_id,
+          pal_id: user.id,
+          visit_id: visit.id
+        })
+        |> repo.insert!()
 
-      visit
-      |> Ecto.Changeset.change(status: :fulfilled)
-      |> repo.update!()
-      |> repo.preload(:transaction)
-    end)
+        user
+        |> Ecto.Changeset.change(
+          remaining_minutes:
+            (user.remaining_minutes || 0) + round(visit.minutes - visit.minutes * 0.15)
+        )
+        |> repo.update!()
+
+        visit
+        |> Ecto.Changeset.change(status: :fulfilled)
+        |> repo.update!()
+        |> repo.preload(:transaction)
+      end)
+    rescue
+      e ->
+        {:error, e.changeset}
+    end
   end
 
   def get_visits_by_status(status) do
