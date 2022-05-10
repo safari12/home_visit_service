@@ -11,7 +11,7 @@ defmodule HomeVisitService.Accounts do
     |> Repo.insert()
   end
 
-  def autenticate(email, password) do
+  def authenticate(email, password) do
     user = Repo.get_by(User, email: email)
 
     with %{password_hash: password_hash} <- user,
